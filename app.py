@@ -5,21 +5,32 @@ import pickle
 import re
 import random
 from nltk.corpus import stopwords
-from collections import Counter
-import time
-import requests  # new
+import requests  # For downloading label encoder from Hugging Face or GitHub
 
 # ——— Hugging Face model repo identifier ———
 MODEL_REPO = "veyi/mental-health-chatbot"
 
+
 @st.cache_resource
 def load_model_and_tokenizer():
-    # load from Hugging Face Hub
+    # Load model and tokenizer from Hugging Face Hub
     tokenizer = AutoTokenizer.from_pretrained(MODEL_REPO)
-    model     = AutoModelForSequenceClassification.from_pretrained(MODEL_REPO)
-    # download label encoder
-    with open("label_encoder.pkl", "rb") as f:
-        label_encoder = pickle.load(f)
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL_REPO)
+
+    # Fetch label encoder from Hugging Face or GitHub (Adjust URL to point to the correct location)
+    hf_url = f"https://huggingface.co/{MODEL_REPO}/resolve/main/label_encoder.pkl"
+    r = requests.get(hf_url)
+
+    if r.status_code == 200:
+        with open("label_encoder.pkl", "wb") as f:
+            f.write(r.content)
+        with open("label_encoder.pkl", "rb") as f:
+            label_encoder = pickle.load(f)
+    else:
+        raise Exception(f"Failed to download label_encoder.pkl from {hf_url}")
+
+    return model, tokenizer, label_encoder
+
 
 # ——— Load Model and Tokenizer ———
 try:
@@ -34,8 +45,10 @@ try:
 except LookupError:
     st.warning("NLTK stopwords not found. Downloading…")
     import nltk
+
     nltk.download("stopwords")
     stop_words = set(stopwords.words("english"))
+
 
 # ——— Cleaning Function ———
 def clean_statement(statement):
