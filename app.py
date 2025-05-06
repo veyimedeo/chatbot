@@ -18,12 +18,8 @@ def load_model_and_tokenizer():
     tokenizer = AutoTokenizer.from_pretrained(MODEL_REPO)
     model     = AutoModelForSequenceClassification.from_pretrained(MODEL_REPO)
     # download label encoder
-    hf_url = f"https://huggingface.co/{MODEL_REPO}/resolve/main/label_encoder.pkl"
-    r = requests.get(hf_url)
-    with open("label_encoder.pkl", "wb") as f:
-        f.write(r.content)
-    label_encoder = pickle.load(open("label_encoder.pkl", "rb"))
-    return model, tokenizer, label_encoder
+    with open("label_encoder.pkl", "rb") as f:
+        label_encoder = pickle.load(f)
 
 # ——— Load Model and Tokenizer ———
 try:
